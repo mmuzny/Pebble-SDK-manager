@@ -31,9 +31,19 @@ function install {
 case $1 in
 use)
 	if [[ $2 =~ ^[0-9]+\.[0-9]+* ]]; then
-		echo Setting PebbleSDK $2 as default
-		rm ~/PebbleSDK
-		ln -s ~/PebbleSDK-$2 ~/PebbleSDK
+		if [ ! -d "~/PebbleSDK-$2" ]; then
+			echo Pebble SDK $2 is currently not installed
+			read -p "Do you wish to install this version? (y/n) " yn
+			    case $yn in
+				[Yy]* ) install $2;;
+				[Nn]* ) exit;;
+				* ) echo "Please answer yes or no.";;
+			    esac
+		else 
+			echo Setting PebbleSDK $2 as default
+			rm ~/PebbleSDK
+			ln -s ~/PebbleSDK-$2 ~/PebbleSDK
+		fi
 	else
 		echo Please provide valid SDK version number
 	fi
