@@ -1,0 +1,92 @@
+#!/bin/bash
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+
+function install {
+	cd ~/pebble_dev/
+	#Initiate the update
+	wget http://assets.getpebble.com.s3-website-us-east-1.amazonaws.com/sdk2/PebbleSDK-$1.tar.gz -O PebbleSDK-$1.tar.gz
+	tar -xzvf PebbleSDK-$1.tar.gz
+	rm PebbleSDK
+	ln -s PebbleSDK-$1 PebbleSDK
+	cd ~/PebbleSDK
+	virtualenv --no-site-packages .env
+	source .env/bin/activate
+	pip install -r requirements.txt
+	deactivate
+	#Download and install ARM tools
+	wget http://assets.getpebble.com.s3-website-us-east-1.amazonaws.com/sdk/arm-cs-tools-ubuntu-universal.tar.gz -O ~/pebble_dev/PebbleSDK-$1/arm-cs-tools.tar.gz
+	cd ~/PebbleSDK-$1/
+	tar -zvxf arm-cs-tools.tar.gz
+	rm arm-cs-tools.tar.gz
+	#Clean up
+	rm ~/PebbleSDK-$1.tar.gz
+	cd ~/
+	printf "${GREEN}Installed Pebble SDK $1 !${NC}\n"
+}
+
+case $1 in
+use)
+	if [[ $2 =~ ^[0-9]+\.[0-9]+* ]]; then
+		echo Setting PebbleSDK $2 as default
+		rm ~/PebbleSDK
+		ln -s ~/PebbleSDK-$2 ~/PebbleSDK
+	else
+		echo Please provide valid SDK version number
+	fi
+;;
+list)
+	REMOTE_SWITCH="--remote"
+	if [ \"$2\" = \"$REMOTE_SWITCH\" ]; then
+		echo Listing remote SDKs
+		
+	else
+		echo Listing installed SDKs
+		
+	fi
+;;
+remove)
+	if [[ $2 =~ ^[0-9]+\.[0-9]+* ]]; then
+		echo Trying to remove $2
+		rm -rf ~/PebbleSDK-$2
+	else
+		echo Please provide valid SDK version number
+	fi
+;;
+install)
+	if [[ $2 =~ ^[0-9]+\.[0-9]+* ]]; then
+		echo Trying to install $2
+		install $2
+	else
+		echo Please provide valid SDK version number
+	fi
+;;
+update) 
+	#Check the installed SDK version against latest version available
+	printf "${RED}Checking for updates...${NC}\n"
+	VERSION_AVAILABLE=`curl -s https://developer.getpebble.com/sdk/changelogs | grep -o 'changelogs/.*/' | sed -e  's/changelogs//g' | sed -e 's/\///g'`
+	VERSION_INSTALLED=`pebble --version 2>&1 | sed -e 's/Pebble SDK //g' | awk '{print $1}'`
+	echo Latest version available $VERSION_AVAILABLE
+	VERSION_INSTALLED=`echo $VERSION_INSTALLED | sed -e 's/://g'`
+
+	if [[ $VERSION_INSTALLED =~ ^[0-9]+\.[0-9]+* ]]; then
+		echo Version installed $VERSION_INSTALLED
+	else
+		echo Cannot determine version installed
+	fi
+
+	if [ \"$VERSION_AVAILABLE\" = \"$VERSION_INSTALLED\" ]; then
+		printf "${GREEN}Latest version already installed${NC}\n"
+	else
+		echo Updating to $VERSION_AVAILABLE
+		install $VERSION_AVAILABLE
+		rm -rf ~/PebbleSDK-$VERSION_INSTALLED
+	fi
+;;
+help|--help)
+	echo Use Pebble Version Manager \(PVM\) to manage multiple versions of Pebble SDK
+;;
+esac
