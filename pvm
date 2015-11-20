@@ -6,7 +6,7 @@ NC='\033[0m'
 
 
 function install {
-	cd ~/pebble_dev/
+	cd ~/
 	#Initiate the update
 	wget http://assets.getpebble.com.s3-website-us-east-1.amazonaws.com/sdk2/PebbleSDK-$1.tar.gz -O PebbleSDK-$1.tar.gz
 	tar -xzvf PebbleSDK-$1.tar.gz
@@ -18,7 +18,7 @@ function install {
 	pip install -r requirements.txt
 	deactivate
 	#Download and install ARM tools
-	wget http://assets.getpebble.com.s3-website-us-east-1.amazonaws.com/sdk/arm-cs-tools-ubuntu-universal.tar.gz -O ~/pebble_dev/PebbleSDK-$1/arm-cs-tools.tar.gz
+	wget http://assets.getpebble.com.s3-website-us-east-1.amazonaws.com/sdk/arm-cs-tools-ubuntu-universal.tar.gz -O ~/PebbleSDK-$1/arm-cs-tools.tar.gz
 	cd ~/PebbleSDK-$1/
 	tar -zvxf arm-cs-tools.tar.gz
 	rm arm-cs-tools.tar.gz
