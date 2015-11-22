@@ -2,11 +2,11 @@
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
 NC='\033[0m'
 
-
 function install {
-	cd ~/
+	cd $HOME
 	#Initiate the update
 	wget http://assets.getpebble.com.s3-website-us-east-1.amazonaws.com/sdk2/PebbleSDK-$1.tar.gz -O PebbleSDK-$1.tar.gz
 	tar -xzvf PebbleSDK-$1.tar.gz
@@ -19,19 +19,32 @@ function install {
 	deactivate
 	#Download and install ARM tools
 	wget http://assets.getpebble.com.s3-website-us-east-1.amazonaws.com/sdk/arm-cs-tools-ubuntu-universal.tar.gz -O ~/PebbleSDK-$1/arm-cs-tools.tar.gz
-	cd ~/PebbleSDK-$1/
+	cd $HOME/PebbleSDK-$1/
 	tar -zvxf arm-cs-tools.tar.gz
 	rm arm-cs-tools.tar.gz
+	#Checking ENV settings
+	PEBBLE_VER=`pebble --version`
+	INSTALLED_PEBBLE_VER="Pebble SDK $1"
+	if [ \"$INSTALLED_PEBBLE_VER\" = \"$PEBBLE_VER\" ]; then
+		echo PATH is set correctly
+	else
+		echo Fixing path settings
+		echo 'export PATH=~/PebbleSDK/bin:$PATH' >> $HOME/.profile
+		echo 'export PATH=~/PebbleSDK/arm-cs-tools/bin:$PATH' >> $HOME/.profile
+		source $HOME/.profile
+	fi
 	#Clean up
-	rm ~/PebbleSDK-$1.tar.gz
-	cd ~/
+	rm $HOME/PebbleSDK-$1.tar.gz
+	cd $HOME/
 	printf "${GREEN}Installed Pebble SDK $1 !${NC}\n"
 }
 
+[ $# -eq 0 ] && { echo "Usage: $0 {use|list|remove|install|update|help}"; exit 1; }
+
 case $1 in
 use)
-	if [[ $2 =~ ^[0-9]+\.[0-9]+* ]]; then
-		if [ ! -d "~/PebbleSDK-$2" ]; then
+	if [[ $2 =~ ^[0-9]+\.[0-9]+.* ]]; then
+		if [ ! -d "$HOME/PebbleSDK-$2" ]; then
 			echo Pebble SDK $2 is currently not installed
 			read -p "Do you wish to install this version? (y/n) " yn
 			    case $yn in
@@ -41,8 +54,8 @@ use)
 			    esac
 		else 
 			echo Setting PebbleSDK $2 as default
-			rm ~/PebbleSDK
-			ln -s ~/PebbleSDK-$2 ~/PebbleSDK
+			rm $HOME/PebbleSDK
+			ln -s $HOME/PebbleSDK-$2 $HOME/PebbleSDK
 		fi
 	else
 		echo Please provide valid SDK version number
@@ -55,19 +68,20 @@ list)
 		
 	else
 		echo Listing installed SDKs
-		
+		ls -al $HOME/ | grep '^d' | grep PebbleSDK | awk '{printf "%-5s %s %-20s\n", "\033[0;32m", $NF, "\033[0m"}'
 	fi
 ;;
 remove)
-	if [[ $2 =~ ^[0-9]+\.[0-9]+* ]]; then
+	if [[ $2 =~ ^[0-9]+\.[0-9]+.* ]]; then
 		echo Trying to remove $2
-		rm -rf ~/PebbleSDK-$2
+		rm -rf $HOME/PebbleSDK-$2
+		printf "${GREEN}$2 removed !${NC}\n"
 	else
 		echo Please provide valid SDK version number
 	fi
 ;;
 install)
-	if [[ $2 =~ ^[0-9]+\.[0-9]+* ]]; then
+	if [[ $2 =~ ^[0-9]+\.[0-9]+.* ]]; then
 		echo Trying to install $2
 		install $2
 	else
@@ -77,15 +91,25 @@ install)
 update) 
 	#Check the installed SDK version against latest version available
 	printf "${RED}Checking for updates...${NC}\n"
-	VERSION_AVAILABLE=`curl -s https://developer.getpebble.com/sdk/changelogs | grep -o 'changelogs/.*/' | sed -e  's/changelogs//g' | sed -e 's/\///g'`
-	VERSION_INSTALLED=`pebble --version 2>&1 | sed -e 's/Pebble SDK //g' | awk '{print $1}'`
-	echo Latest version available $VERSION_AVAILABLE
-	VERSION_INSTALLED=`echo $VERSION_INSTALLED | sed -e 's/://g'`
-
-	if [[ $VERSION_INSTALLED =~ ^[0-9]+\.[0-9]+* ]]; then
+	VERSION_AVAILABLE=`curl -m 30 -s https://developer.getpebble.com/sdk/changelogs | grep -o 'changelogs/.*/' | sed -e  's/changelogs//g' | sed -e 's/\///g'`
+	if [[ $VERSION_AVAILABLE =~ ^[0-9]+\.[0-9]+.* ]]; then
+		echo Latest version available $VERSION_AVAILABLE
+	else
+		echo Cannot check latest version on Pebble servers
+		exit
+	fi
+	#VERSION_IN_USE=`pebble --version 2>&1 | sed -e 's/Pebble SDK //g' | awk '{print $1}'`
+	VERSION_INSTALLED=`ls -al --group-directories-first $HOME/ | grep '^d' | grep PebbleSDK- | tail -n 1 | awk '{print $NF}' | sed -e 's/PebbleSDK-//g'`
+	if [[ $VERSION_INSTALLED =~ ^[0-9]+\.[0-9]+.* ]]; then
 		echo Version installed $VERSION_INSTALLED
 	else
-		echo Cannot determine version installed
+		echo Looks like you do not have Pebble SDK installed
+		read -p "Do you wish to install latest version? (y/n) " yn
+		    case $yn in
+			[Nn]* ) exit;;
+			[Yy]* ) ;;
+			* ) echo "Please answer yes or no.";;
+		    esac
 	fi
 
 	if [ \"$VERSION_AVAILABLE\" = \"$VERSION_INSTALLED\" ]; then
@@ -93,7 +117,7 @@ update)
 	else
 		echo Updating to $VERSION_AVAILABLE
 		install $VERSION_AVAILABLE
-		rm -rf ~/PebbleSDK-$VERSION_INSTALLED
+		rm -rf $HOME/PebbleSDK-$VERSION_INSTALLED
 	fi
 ;;
 help|--help)
