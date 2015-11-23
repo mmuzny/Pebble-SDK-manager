@@ -5,6 +5,18 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+function fixenv {
+	PEBBLE=`pebble --version 2>&1`
+	if [[ $PEBBLE =~ ^.*[0-9]+\.[0-9]+.* ]]; then
+		echo PATH is set correctly
+	else
+		echo Fixing path settings
+		echo 'export PATH=~/PebbleSDK/bin:$PATH' >> $HOME/.profile
+		echo 'export PATH=~/PebbleSDK/arm-cs-tools/bin:$PATH' >> $HOME/.profile
+		source $HOME/.profile
+	fi
+}
+
 function install {
 	cd $HOME
 	#Initiate the update
@@ -23,9 +35,9 @@ function install {
 	tar -zvxf arm-cs-tools.tar.gz
 	rm arm-cs-tools.tar.gz
 	#Checking ENV settings
-	PEBBLE_VER=`pebble --version`
+	PEBBLE_VER=`pebble --version 2>&1`
 	INSTALLED_PEBBLE_VER="Pebble SDK $1"
-	if [ \"$INSTALLED_PEBBLE_VER\" = \"$PEBBLE_VER\" ]; then
+	if test "$INSTALLED_PEBBLE_VER" = "$PEBBLE_VER"; then
 		echo PATH is set correctly
 	else
 		echo Fixing path settings
@@ -39,7 +51,7 @@ function install {
 	printf "${GREEN}Installed Pebble SDK $1 !${NC}\n"
 }
 
-[ $# -eq 0 ] && { echo "Usage: $0 {use|list|remove|install|update|help}"; exit 1; }
+[ $# -eq 0 ] && { echo "Usage: $0 {use|list|remove|install|update|fix|help}"; exit 1; }
 
 case $1 in
 use)
@@ -60,6 +72,9 @@ use)
 	else
 		echo Please provide valid SDK version number
 	fi
+;;
+fix)
+	fixenv
 ;;
 list)
 	REMOTE_SWITCH="--remote"
