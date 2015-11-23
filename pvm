@@ -11,9 +11,9 @@ function fixenv {
 		echo PATH is set correctly
 	else
 		echo Fixing path settings
-		echo 'export PATH=~/PebbleSDK/bin:$PATH' >> $HOME/.profile
-		echo 'export PATH=~/PebbleSDK/arm-cs-tools/bin:$PATH' >> $HOME/.profile
-		source $HOME/.profile
+		echo 'export PATH=~/PebbleSDK/bin:$PATH' >> $HOME/.bashrc
+		echo 'export PATH=~/PebbleSDK/arm-cs-tools/bin:$PATH' >> $HOME/.bashrc
+		source $HOME/.bashrc
 	fi
 }
 
@@ -41,9 +41,9 @@ function install {
 		echo PATH is set correctly
 	else
 		echo Fixing path settings
-		echo 'export PATH=~/PebbleSDK/bin:$PATH' >> $HOME/.profile
-		echo 'export PATH=~/PebbleSDK/arm-cs-tools/bin:$PATH' >> $HOME/.profile
-		source $HOME/.profile
+		echo 'export PATH=~/PebbleSDK/bin:$PATH' >> $HOME/.bashrc
+		echo 'export PATH=~/PebbleSDK/arm-cs-tools/bin:$PATH' >> $HOME/.bashrc
+		source $HOME/.bashrc
 	fi
 	#Clean up
 	rm $HOME/PebbleSDK-$1.tar.gz
