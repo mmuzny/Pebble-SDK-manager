@@ -14,6 +14,7 @@ function fixenv {
 		echo 'export PATH=~/PebbleSDK/bin:$PATH' >> $HOME/.bashrc
 		echo 'export PATH=~/PebbleSDK/arm-cs-tools/bin:$PATH' >> $HOME/.bashrc
 		source $HOME/.bashrc
+		echo Run source ~/.bashrc or open a new terminal session to complete the installation
 	fi
 }
 
@@ -44,6 +45,7 @@ function install {
 		echo 'export PATH=~/PebbleSDK/bin:$PATH' >> $HOME/.bashrc
 		echo 'export PATH=~/PebbleSDK/arm-cs-tools/bin:$PATH' >> $HOME/.bashrc
 		source $HOME/.bashrc
+		echo Run source ~/.bashrc or open a new terminal session to complete the installation
 	fi
 	#Clean up
 	rm $HOME/PebbleSDK-$1.tar.gz
